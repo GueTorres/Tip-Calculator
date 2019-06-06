@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">tipCalculator</string>
+    <string name ="textView_billAmountHint">Enter amount</string>
+</resources>
