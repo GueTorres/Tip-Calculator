@@ -1,114 +1,101 @@
-package com.example.tipcalculator;
+package com.example.calculusgratuitus;
 
-import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.widget.EditText;
 import android.widget.SeekBar;
+import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.TextView;
-
-import com.example.tipcalculator.R;
 
 import java.text.NumberFormat;
 
-public class MainActivity extends AppCompatActivity
-        implements TextWatcher, SeekBar.OnSeekBarChangeListener {
-
-    //declare your variables for the widgets
-    private EditText editTextBillAmount;
-    private TextView textViewBillAmount;
-
-    //declare the variables for the calculations
-    private double billAmount = 0.0;
-    private double percent = .15;
-
-    //set the number formats to be used for the $ amounts , and % amounts
-    private static final NumberFormat currencyFormat = NumberFormat.getCurrencyInstance();
-    private static final NumberFormat percentFormat = NumberFormat.getPercentInstance();
+public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        //add Listeners to Widgets
-        editTextBillAmount = (EditText) findViewById(R.id.editText_BillAmount);
- /*  Note: each View that will be retrieved using findViewById needs to map to a View with the matching id
-Example: editTextBillAmount
-Needs to map to a View with the following: android:id="@+id/editText_BillAmount
-*/
-        editTextBillAmount.addTextChangedListener((TextWatcher) this);
 
-        textViewBillAmount = (TextView) findViewById(R.id.textView_BillAmount);
-    }
+        amountTextView = (TextView) findViewById(R.id.amountTextView);
+        percentTextView = (TextView) findViewById(R.id.percentTextView);
+        tipTextView = (TextView) findViewById(R.id.tipTextView);
+        totalTextView = (TextView) findViewById(R.id.totalTextView);
+        tipTextView.setText(currencyFormat.format(0));
+        totalTextView.setText(currencyFormat.format(0));
 
-    @Override
-    public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-    }
+        EditText amountEditText =
+                (EditText) findViewById(R.id.amountEditText);
+        amountEditText.addTextChangedListener(amountEditTextWatcher);
 
-    /*
-    Note:   int i, int i1, and int i2
-            represent start, before, count respectively
-            The charSequence is converted to a String and parsed to a double for you
-     */
-    @Override
-    public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-        Log.d("MainActivity", "inside onTextChanged method: charSequence= " + charSequence);
-        //surround risky calculations with try catch (what if billAmount is 0 ?
-        //charSequence is converted to a String and parsed to a double for you
-        billAmount = Double.parseDouble(charSequence.toString()) / 100;
-        Log.d("MainActivity", "Bill Amount = " + billAmount);
-        //setText on the textView
-        textViewBillAmount.setText(currencyFormat.format(billAmount));
-        //perform tip and total calculation and update UI by calling calculate
-
-        try {
-            calculate();
-        } catch (Exception e) {
-            System.out.println("Bill amount is too small.");
-        }
-    }
-
-    @Override
-    public void afterTextChanged(Editable editable) {
+        SeekBar percentSeekBar =
+                (SeekBar) findViewById(R.id.percentSeekBar);
+        percentSeekBar.setOnSeekBarChangeListener(seekBarListener);
 
     }
 
-    @Override
-    public void onProgressChanged(SeekBar seekBar, int progress, boolean b) {
-        percent = progress / 100; //calculate percent based on seeker value
-        calculate();
-    }
+    private final OnSeekBarChangeListener seekBarListener =
+            new OnSeekBarChangeListener(){
+                @Override
+                public void onProgressChanged(SeekBar seekBar, int progress,
+                   boolean fromUser){
+                    percent = progress / 100.0;
+                    calculate();
+                }
+                @Override
+                public void onStartTrackingTouch(SeekBar seekBar) {}
 
-    @Override
-    public void onStartTrackingTouch(SeekBar seekBar) {
+                @Override
+                public void onStopTrackingTouch(SeekBar seekBar) {}
+            };
+    private static final NumberFormat currencyFormat =
+            NumberFormat.getCurrencyInstance();
+    private static final NumberFormat percentFormat =
+            NumberFormat.getPercentInstance();
 
-        int value = seekBar.getProgress(); //will give bar value while pressing
-    }
+    private double billAmount = 0.0;
+    private double percent = 0.15;
+    private TextView amountTextView;
+    private TextView percentTextView;
+    private TextView tipTextView;
+    private TextView totalTextView;
 
-    @Override
-    public void onStopTrackingTouch(SeekBar seekBar) {
-
-        int value = seekBar.getProgress(); //will give bar value after stop pressing
-    }
-
-    // calculate and display tip and total amounts
     private void calculate() {
+
         Log.d("MainActivity", "inside calculate method");
-        //uncomment below
+        percentTextView.setText(percentFormat.format(percent));
 
-        // format percent and display in percentTextView
-        textViewPercent.setText(percentFormat.format(percent));
-
-        // calculate the tip and total
         double tip = billAmount * percent;
-        //use the tip example to do the same for the Total
+        double total = billAmount + tip;
 
-        // display tip and total formatted as currency
-        //user currencyFormat instead of percentFormat to set the textViewTip
         tipTextView.setText(currencyFormat.format(tip));
-        //use the tip example to do the same for the Total
-
+        totalTextView.setText(currencyFormat.format(total));
     }
+
+    private final TextWatcher amountEditTextWatcher = new TextWatcher() {
+
+        @Override
+        public void onTextChanged(CharSequence s, int start,
+                                  int before, int count){
+            Log.d("MainActivity", "inside onTextChanged method: charSequence="+ s );
+            try{
+                billAmount = Double.parseDouble(s.toString()) / 100.0;
+                Log.d("MainActivity", "Bill Amount = "+billAmount);
+                amountTextView.setText(currencyFormat.format(billAmount));
+            }
+            catch(NumberFormatException e) {
+                amountTextView.setText("");
+                billAmount = 0.0;
+            }
+            calculate();
+        }
+        @Override
+        public void afterTextChanged(Editable s){}
+
+        @Override
+        public void beforeTextChanged(
+                CharSequence s, int start, int count, int after) { }
+    };
 }
